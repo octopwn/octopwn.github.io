@@ -110,7 +110,7 @@ function addNewCredentialKeyTypeChanged(selection) {
     var credsecret = document.getElementById('addCredentialSecret');
 
     switch (true) {
-        case (selection == 5):
+        case (selection == 5 || selection == 7):
             {
                 certFileDiv.hidden = false;
                 keyFileDiv.hidden = true;
@@ -195,7 +195,13 @@ function addNewProxyTypeChanged(selection) {
             }
     }
 }
+// verify connection to the server or proxy
+function verifyConnectivity() {
+    var sb = document.getElementById("startPyodideButton");
+    sb.parentNode.removeChild(sb);
 
+
+}
 
 /// loading screen control functions
 function startLoadingScreen() {
@@ -233,13 +239,13 @@ function stopLoadingScreenSuccess() {
 }
 
 function stopLoadingScreenError(msg) {
-    console.log(msg);
+    var textbox = document.getElementById("loadingMessageTextArea");
     textbox.innerHTML += '[-] ' + msg + '\n';
+    textbox.innerHTML += '[!] Critical error! Please restart this tab and hope for better results!\n';
     textbox.scrollTop = textbox.scrollHeight;
 }
 
 function loadingScreenMessage(msg) {
-    console.log(msg);
     var textbox = document.getElementById("loadingMessageTextArea");
     textbox.innerHTML += '[+] ' + msg + '\n';
     textbox.scrollTop = textbox.scrollHeight;
@@ -322,7 +328,7 @@ function AddDataTableEntryP8(tableid, p1, p2, p3, p4, p5, p6, p7, p8) {
         p6,
         p7,
         p8
-    ]).draw();
+    ]);
 }
 
 function RefreshDataTable(tableid) {
@@ -544,6 +550,67 @@ function createClientUpdateProxy(proxyID, proxyLine) {
     cline.innerHTML = proxyLine;
 }
 
+function remoteServerAuthTypeChanged(selection) {
+    switch (true) {
+        case (selection == 1):
+            {
+                document.getElementById('remoteserverusernameDiv').hidden = false;
+                document.getElementById('remoteserverpasswordDiv').hidden = false;
+                break;
+            }
+        case (selection == 2):
+            {
+                document.getElementById('remoteserverusernameDiv').hidden = true;
+                document.getElementById('remoteserverpasswordDiv').hidden = true;
+                break;
+            }
+        case (selection == 3):
+            {
+                document.getElementById('remoteserverusernameDiv').hidden = true;
+                document.getElementById('remoteserverpasswordDiv').hidden = true;
+                break;
+            }
+            
+    
+    
+    }
+}
+
+function octoPwnModeOfOperationChanged(selection) {
+    switch (true) {
+        case (selection == 1):
+            {
+                document.getElementById('startupParameterStandaloneDiv').hidden = true;
+                document.getElementById('startupParameterRemoteDiv').hidden = true;
+                document.getElementById('startupParameterOfflineDiv').hidden = false;
+                break;
+            }
+        case (selection == 2):
+            {
+                document.getElementById('startupParameterStandaloneDiv').hidden = false;
+                document.getElementById('startupParameterRemoteDiv').hidden = true;
+                document.getElementById('startupParameterOfflineDiv').hidden = true;
+                break;
+            }
+        case (selection == 3):
+            {
+                document.getElementById('startupParameterStandaloneDiv').hidden = true;
+                document.getElementById('startupParameterRemoteDiv').hidden = false;
+                document.getElementById('startupParameterOfflineDiv').hidden = true;
+                break;
+            }
+    }
+}
+
+function getOctoPwnModeOfOperation() {
+    sel = document.getElementById("octopwnMOO");
+	return sel.options[sel.selectedIndex].text;
+}
+
+function getRemoteServerAuthType(){
+    sel = document.getElementById("remoteServerAuthType");
+	return sel.options[sel.selectedIndex].text;
+}
 
 
 function createClientProtocolTypeChanged(selection) {
@@ -572,6 +639,12 @@ function createClientProtocolTypeChanged(selection) {
                 supportedProtocols = ["NONE", "DES"];
                 break;
             }
+        case (selection == 6):
+            {
+                //RDP
+                supportedProtocols = ["PLAIN"];
+                break;
+            }
 
     }
 
@@ -587,7 +660,7 @@ async function createNewClient() {
     var cid = document.getElementById("createClientCredentialID").innerHTML;
     var tid = document.getElementById("createClientTargetID").innerHTML;
     var pid = document.getElementById("createClientProxyID").innerHTML;
-    if (document.getElementById('standaloneSelector').checked) {
+    if (getOctoPwnModeOfOperation() == 'STANDALONE') {
         if (pid == '') pid = '0'; // default proxy always exists
     } else {
         if (pid == '') pid = null;
@@ -851,53 +924,75 @@ function removeEditorModalMenu() {
     }
 }
 
-function showPythonError(exc, title = '') {
+
+
+function showError(title, description = '', details = '') {
     // exc is an array with exception string and traceback string
-    $(`<div class="modal fade pythonExceptionModalClass" id="pythonExceptionModal" tabindex="-1" role="dialog" aria-labelledby="pythonExceptionModal" aria-hidden="true" data-bs-backdrop="static">
+    $(`<div class="modal fade exceptionModalClass" id="exceptionModal" tabindex="-1" role="dialog" aria-labelledby="exceptionModal" aria-hidden="true" data-bs-backdrop="static">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <!-- Modal Header -->
                 <div class="modal-header">
-                    <h4 class="modal-title" id="pythonExceptionModalTitle">Error :(</h4>
+                    <h4 class="modal-title" id="exceptionModalTitle">Error :(</h4>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 
                 <!-- Modal Body -->
-                <div class="modal-body">
+                <div class="modal-body" id = "exceptionModalBodyDiv">
                     <form class="form-horizontal">
                         <div class="form-group">
                             <!-- left column -->
                             <div>
-                                <div class="form-group">
-                                    <label for="pythonExceptionModalException" class="col-sm-2 control-label">Exception</label>
+                                <div class="form-group" id="exceptionModalExceptionDiv">
+                                    <label for="exceptionModalException" class="col-sm-2 control-label">Exception</label>
                                     <div class="col-sm-8">
-                                        <textarea class="consoleoutputfield" id="pythonExceptionModalException" rows=1 readonly></textarea>
+                                        <textarea class="consoleoutputfield" id="exceptionModalException" rows=1 readonly></textarea>
                                     </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="pythonExceptionModalTraceback" class="col-sm-2 control-label">Traceback</label>
+                                <div class="form-group" id="exceptionModalTracebackDiv">
+                                    <label for="exceptionModalTraceback" class="col-sm-2 control-label">Traceback</label>
                                     <div class="col-sm-8">
-                                        <textarea class="consoleoutputfield" id="pythonExceptionModalTraceback" rows=10 readonly></textarea>
+                                        <textarea class="consoleoutputfield" id="exceptionModalTraceback" rows=10 readonly></textarea>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <!-- Modal Footer -->
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="removeClass('pythonExceptionModalClass')">Well..</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="removeClass('exceptionModalClass')">Well..</button>
                         </div><!-- End Modal Footer -->
                     </form>
                 </div> <!-- End modal body div -->
             </div> <!-- End modal content div -->
         </div> <!-- End modal dialog div -->
     </div> <!-- End modal div -->`).appendTo("body").finish();
-    if (title != '' && title != undefined) {
-        document.getElementById("pythonExceptionModalTitle").innerHTML = title;
+    
+    document.getElementById("exceptionModalTitle").innerHTML = title;
+
+    if(description == null || description == undefined || description == ''){
+        document.getElementById("exceptionModalExceptionDiv").hidden = true
     }
-    document.getElementById("pythonExceptionModalException").innerHTML = exc[0];
-    document.getElementById("pythonExceptionModalTraceback").innerHTML = exc[1];
-    $('#pythonExceptionModal').modal('show');
+    else{
+        document.getElementById("exceptionModalException").innerHTML = description;
+    }
+    if(details == null || details == undefined || details == ''){
+        document.getElementById("exceptionModalTracebackDiv").hidden = true
+    }
+    else{
+        document.getElementById("exceptionModalTraceback").innerHTML = details;
+    }
+
+    if((details == null || details == undefined || details == '') && (description == null || description == undefined || description == '')){
+        document.getElementById("exceptionModalBodyDiv").hidden = true
+    }
+    
+    $('#exceptionModal').modal('show');
 }
+
+function showPythonError(exc, title = '') {
+    showError(title, exc[0], exc[1]);
+}
+
 
 function removeClass(classname) {
     const elements = document.getElementsByClassName(classname);
@@ -981,14 +1076,23 @@ function showCreateProxyChainModal(cid, ctype, description) {
 
     });
 
-    let optsel = document.getElementById(`createProxyChainModalAddChain-1`);
-    optsel.innerHTML = '<option value="0" selected>WSNET</option>';
-
-
-    for (let i = 2; i < 6; i++) {
-        let optsel = document.getElementById(`createProxyChainModalAddChain-${i}`);
-        optsel.innerHTML = options;
+    if (getOctoPwnModeOfOperation() == 'STANDALONE') {
+        let optsel = document.getElementById(`createProxyChainModalAddChain-1`);
+        optsel.innerHTML = '<option value="0" selected>WSNET</option>';
+        for (let i = 2; i < 6; i++) {
+            let optsel = document.getElementById(`createProxyChainModalAddChain-${i}`);
+            optsel.innerHTML = options;
+        }
     }
+    else{
+        for (let i = 1; i < 6; i++) {
+            let optsel = document.getElementById(`createProxyChainModalAddChain-${i}`);
+            optsel.innerHTML = options;
+        }
+    }
+
+
+    
 
 
     $('#createProxyChainModal').modal('show');

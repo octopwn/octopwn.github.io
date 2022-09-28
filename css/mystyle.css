@@ -193,6 +193,8 @@ body .lm_content {
 [type=search]:focus,
 input[type=text],
 input[type=text]:focus,
+input[type=password],
+input[type=password]:focus,
 input[type=file],
 input[type=file]:focus {
     box-sizing: border-box;
@@ -334,4 +336,14 @@ input[type=file]:focus {
     100% {
         opacity: 1;
     }
+}
+
+#fileBrowserFunctions
+{
+    text-align:left;
+}
+
+#fileBrowserFunctionsDownloadDiv, #fileBrowserFunctionsUploadDiv
+{
+    display:inline;
 }

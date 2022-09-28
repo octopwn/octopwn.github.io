@@ -3,14 +3,11 @@ import js
 import os
 import asyncio
 import traceback
-from pyodide import to_js, create_proxy
-
-from octopwn import logger
-
+from pyodide import create_proxy
 #from octopwn.common.screenhandler import ScreenHandlerBase
 
 
-octopwnApp = None
+octopwnApp = None # Do not remove this!
 
 class Dummy:
 	def __init__(self):
@@ -25,9 +22,22 @@ def createRegFileBrowser(filename):
 def gettb4exc(exc):
 	# helping javascript to get the string representation of the traceback 
 	# when a python exception happens
+	if exc is None:
+		return 'No additional info'
 	return '\r\n'.join(traceback.format_tb(exc.__traceback__))
 
+def criticalexception(msg, e = None):
+	excstr = msg
+	exctrace = 'There is no turning back now, please reload this browser tab.\r\n If you have any files stored in browserfs/volatile you might want to back them up!'
+	if e is not None:
+		exctrace += str(e) + '\r\n'
+		exctrace += gettb4exc(e)
+	js.showPythonError([excstr, exctrace], msg)
+
 class RemoteComms:
+	"""
+	This class is here to emulate a python websockets connection over the javascript websockets interface
+	"""
 	def __init__(self, url):
 		self.url = url
 		self.internal_in_q = asyncio.Queue()
@@ -37,6 +47,7 @@ class RemoteComms:
 		self.connection_id = None
 		self._open = False
 		self.__read_task = None
+		self.__monitor_task = None
 	
 	@property
 	def open(self):
@@ -45,6 +56,12 @@ class RemoteComms:
 		return False
 
 	def close(self):
+		self.ws_closed.set()
+		if self.__read_task is not None:
+			self.__read_task.cancel()
+		if self.__monitor_task is not None:
+			self.__monitor_task.cancel()
+		
 		return
 	
 	async def send(self, data):
@@ -55,24 +72,46 @@ class RemoteComms:
 
 	async def __reader(self):
 		try:
-			await asyncio.wait_for(self.ws_open.wait(), timeout=10)
+			try:
+				await asyncio.wait_for(self.ws_open.wait(), timeout=10)
+			except asyncio.TimeoutError:
+				criticalexception("Connection to server timed out!")
+				return
+			except Exception as e:
+				raise e
+
 			while self.open:
 				data_memview = await self.internal_in_q.get()
 				await self.in_q.put(data_memview.to_py())
 		except Exception as e:
 			traceback.print_exc()
+		finally:
+			await self.close()
+
+	async def __connection_status_monitor(self):
+		try:
+			await self.ws_closed.wait()
+			criticalexception("Server closed the connection")	
+		except:
+			pass
+		finally:
+			await self.close()
 
 	async def run(self):
-		self.connection_id = js.createNewWebSocket(
-			self.url, 
-			create_proxy(self.ws_open), 
-			create_proxy(self.internal_in_q), 
-			create_proxy(self.ws_closed), 
-			False, 
-		)
-		self.__read_task = asyncio.create_task(self.__reader())
-
-
+		try:
+			self.connection_id = js.createNewWebSocket(
+				self.url, 
+				create_proxy(self.ws_open), 
+				create_proxy(self.internal_in_q), 
+				create_proxy(self.ws_closed), 
+				False, 
+			)
+			self.__read_task = asyncio.create_task(self.__reader())
+			self.__monitor_task = asyncio.create_task(self.__connection_status_monitor())
+			await asyncio.wait_for(self.ws_open.wait(), timeout=10)
+			return True, None
+		except Exception as e:
+			return None, e
 
 
 class ScreenHandlerGoldenLayout:
@@ -92,7 +131,7 @@ class ScreenHandlerGoldenLayout:
 
 		self.remoting_support = remoting_support
 	
-	async def print_client_msg(self, clientid:int, msg:str):
+	async def print_client_msg(self, clientid:int, msg:str, username = None):
 		try:
 			#print('print_client_msg %s %s' % (clientid, msg))
 			window = js.document.getElementById(self.consoleoutput_base_id % clientid)
@@ -105,7 +144,7 @@ class ScreenHandlerGoldenLayout:
 		except Exception as e:
 			return None, e
 
-	async def print_main_window(self, msg):
+	async def print_main_window(self, msg, username= None):
 		await self.print_client_msg(0, msg)
 
 	async def clear_main_window(self):
@@ -150,7 +189,6 @@ class ScreenHandlerGoldenLayout:
 	async def target_added(self, tid, target):
 		"""Called when a new target has been added"""
 		try:
-			print('target_added!')
 			if target.hidden is True:
 				return
 			js.AddDataTableEntryP6(
@@ -162,7 +200,6 @@ class ScreenHandlerGoldenLayout:
 				str(target.description) if target.description is not None else '',
 				str(target.to_line())
 			)
-			print('target_added! ret')
 			return True, None
 		except Exception as e:
 			print(e)
@@ -230,6 +267,7 @@ class ScreenHandlerGoldenLayout:
 		js.ClearDataTable('#' + self.credentialtable_id)
 		for tid in self.octopwn.credentials:
 			await self.credential_added(tid, self.octopwn.credentials[tid])
+		js.RefreshDataTable('#' + self.credentialtable_id)
 		self.credrefresh_task = None
 
 	async def refresh_credentials(self):
@@ -336,8 +374,16 @@ async def start():
 		global octopwnApp
 		# setting the current directory
 		os.chdir("/volatile/")
-
-		remote = not js.document.getElementById('standaloneSelector').checked
+		
+		# mode of operation switch. This looks a bit dumb here, but later down the line
+		# this will be extended with other features
+		MOO = js.getOctoPwnModeOfOperation()
+		if MOO == 'OFFLINE':
+			remote = False
+		elif MOO == 'STANDALONE':
+			remote = False
+		elif MOO == 'REMOTE':
+			remote = True
 
 		screen = ScreenHandlerGoldenLayout(remote)
 
@@ -380,19 +426,59 @@ async def start():
 			from octopwn.remote.client.core import OctoPwnRemoteClient
 			from octopwn.remote.client import logger as remclilogger
 
+			js.loadingScreenMessage("Determining authentication type...")
+			def get_val_or_none(x):
+				res = js.document.getElementById(x)
+				if res is None:
+					return None	
+				if res.value == '':
+					return None
+				return res.value
+
+			def get_authmethod():
+				return js.getRemoteServerAuthType()
+
+			username = get_val_or_none("remoteserverusername")
+			password = get_val_or_none("remoteserverpassword")
+			authmethod = get_authmethod()
+
+			js.loadingScreenMessage("Authentication type %s will be used" % authmethod)
 			remclilogger.setLevel(logging.DEBUG)
-			# just a remote client
+			
 			url = js.document.getElementById('remoteserverurl').value
+			js.loadingScreenMessage("Creating websockets connection to %s" % url)
 			comms = RemoteComms(url)
-			await comms.run()
-			octopwnApp = OctoPwnRemoteClient(None, None, screen)
-			apprunner = asyncio.create_task(octopwnApp.run_generic(comms))	
-
-
+			_, err = await comms.run()
+			if err is not None:
+				js.stopLoadingScreenError("Server connection error!")
+				raise err
+			js.loadingScreenMessage("Connected to remote server!")
+			
+			octopwnApp = OctoPwnRemoteClient(
+				None, 
+				None, 
+				screen, 
+				username=username, 
+				password=password, 
+				authmethod=authmethod
+			)
+			js.loadingScreenMessage("Authenticating...")
+			try:
+				_, err = await asyncio.wait_for(octopwnApp.authenticate(comms), timeout=5)
+			except asyncio.TimeoutError:
+				criticalexception('Authentication timed out!')
+				raise Exception('Authentication timed out!')
+			if err is not None:
+				criticalexception('Authentication error!', err)
+				raise err
+			js.loadingScreenMessage("Authentication OK!")
+			apprunner = asyncio.create_task(octopwnApp.run_generic(comms))
+			
 		await asyncio.sleep(0)
+		return True, None
 	except Exception as e:
-		js.stopLoadingScreenError(str(e))
 		traceback.print_exc()
+		return False, e
 
 await start()
 
