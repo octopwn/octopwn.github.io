@@ -52,10 +52,10 @@ async function startOctoPwn(pyodide){
     startPythonConsole("#pyConsoleDiv", pyodide);
 
     loadingScreenMessage('Bootstrapping OctoPwn (this might take a while)...');
-    var runresult = await pyodide.runPythonAsync(pyCode);
-    var res = runresult.toJs();
+    let runresult = await pyodide.runPythonAsync(pyCode);
+    let res = runresult.toJs();
     runresult.destroy();
-    var exc = undefined;
+    let exc = undefined;
     if (res[1] != undefined) {
         let excstr = res[1].toString();
         let tbformat = pyodide.globals.get('gettb4exc');
@@ -114,13 +114,13 @@ async function startOctoPwn(pyodide){
 
         
         let app = pyodide.globals.get('octopwnApp');
-        var respy = await app.do_createclient(ctype, cauth, cid, tid, pid);
+        let respy = await app.do_createclient(ctype, cauth, cid, tid, pid);
         if (getOctoPwnModeOfOperation() != 'STANDALONE') {
             return [null, null];
         }
-        var res = respy.toJs();
+        let res = respy.toJs();
         respy.destroy();
-        var exc = undefined;
+        let exc = undefined;
         if (res[1] != undefined) {
             let excstr = res[1].toString();
             let tbformat = pyodide.globals.get('gettb4exc');
@@ -152,16 +152,16 @@ async function startOctoPwn(pyodide){
     }
     octopwnGetMainCommands = () => {
         let app = pyodide.globals.get('octopwnApp');
-        var availableCommandsProxy = app.command_list();
-        var availableCommands = availableCommandsProxy.toJs();
+        let availableCommandsProxy = app.command_list();
+        let availableCommands = availableCommandsProxy.toJs();
         availableCommandsProxy.destroy();
         app.destroy();
         return availableCommands;
     }
     octopwnCreateNewChain = async(pids) => {
         let app = pyodide.globals.get('octopwnApp');
-        var resproxy = await app.do_createchain();
-        var res = resproxy.toJs();
+        let resproxy = await app.do_createchain();
+        let res = resproxy.toJs();
         resproxy.destroy();
         if (res[3] != undefined) {
             let excstr = res[3].toString();
@@ -198,7 +198,7 @@ async function startOctoPwn(pyodide){
 
 function verifyWSConnect(url) {
     return new Promise(function(resolve, reject) {
-        var server = new WebSocket(url);
+        let server = new WebSocket(url);
         server.onopen = function() {
             resolve(server);
         };
@@ -258,7 +258,7 @@ const startPyodide = async() => {
 
     // loading the pyodide core. (this will load the core only)
     loadingScreenMessage("Loading Pyodide core...");
-    const pyodide = await loadPyodide({ indexURL: window.location.href +"/js/pyodide/" });
+    const pyodide = await loadPyodide({ indexURL: window.location.origin +"/js/pyodide/" });
     // Pyodide core is now ready to use
 
     // setting up virtual filesystem
@@ -280,11 +280,11 @@ const startPyodide = async() => {
         }
         // Otherwise, BrowserFS is ready-to-use!
 
-        var fs = BrowserFS.BFSRequire('fs');
+        let fs = BrowserFS.BFSRequire('fs');
         let FS = pyodide._module.FS;
         let PATH = pyodide._module.PATH;
         let ERRNO_CODES = pyodide._module.ERRNO_CODES;
-        var BFS = new BrowserFS.EmscriptenFS(FS, PATH, ERRNO_CODES);
+        let BFS = new BrowserFS.EmscriptenFS(FS, PATH, ERRNO_CODES);
         //FS.mkdir('data');
         loadingScreenMessage('Mounting LocalStorage based filesystem...');
         FS.mkdir('/static');

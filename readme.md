@@ -32,6 +32,7 @@ You will get the following
  - Kerberos client
  - RDP client
  - VNC client
+ - SSH client
  - NetCat (raw TCP) client
  - Scanners scanners scanners
    - smb finger
@@ -99,7 +100,7 @@ IMPORTANT: Every time a proxy can be supplied, the default WSNET proxy must be s
    - Sometimes you'd need to click REFRESH it manually.
  - CREDENTIALS tab
    - Lists stored credentials which can be used in all clients and scanners
-   - Special characters like `\\` must be escaped with `\\`
+   - Special characters like `\\` must be escaped with `\\\\`
    - Currently they are displayed in a truncated format, don't be afraid of not seeing the middle part
  - Octopwn web framework
    - It runs in your browser. No data should go in/out to the internet after loading.
@@ -108,7 +109,7 @@ IMPORTANT: Every time a proxy can be supplied, the default WSNET proxy must be s
    - The default Pyodide console (python console) can be accessed at `/console.html`
  - About browsers
    - For some reason the framework runs on Chrome much faster than others
-   - Functionalities were tested on FireFox
+   - Functionalities were tested on Chrome and FireFox
 
 
 # Known limitations
@@ -116,7 +117,7 @@ IMPORTANT: Every time a proxy can be supplied, the default WSNET proxy must be s
  1. File-related operations are provided by BrowserFS. This means you have many backend options, but all of them come with certain limitations.  
     If using memory-backed filesystem then you loose your data when reloading the page. if you are using localstorage backed fs, you will run into out-of-diskspace errors.
  2. Operations are generally slower (due to the many layers of virtualizations) and browser might hang during extreme cases (see next point)
- 3. Pyodide has an issue where reloading the page many times causes out-of-memory error. (crashing the browser even)
+ 3. HTTP/HTTPS and browser security. In STANDALONE/REMOTE mode the OctoPwn engine will need to connect to a remote URL, you can't mix HTTP and HTTPS or WS and WSS protocols.
 
 # Kudos
 - The entire Pyodide dev team. This project couldn't exist without you.
