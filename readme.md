@@ -16,7 +16,7 @@ You will get the following
    - [DOTNET](https://gitlab.porchetta.industries/Skelsec/wsnetframework) - Using .NET Framework, but supports .NET Core and Standard
    - [Python](https://github.com/skelsec/wsnet) - Contains both client and server code
  - The website source code [here](https://gitlab.porchetta.industries/Skelsec/octopwnweb)
- - Build environment for the pyodide core so you can rebuild everything yourself. Coming as soon as I can clear up the code
+ - In hte future: Build environment for the pyodide core so you can rebuild everything yourself. Coming as soon as I can clear up the code
 
 ## Non-subscribers
  - You can use the Python version downloadable here [wsnet](https://github.com/skelsec/wsnet/)

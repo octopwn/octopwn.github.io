@@ -135,7 +135,11 @@ class ScreenHandlerGoldenLayout:
 		try:
 			#print('print_client_msg %s %s' % (clientid, msg))
 			window = js.document.getElementById(self.consoleoutput_base_id % clientid)
-			window.innerHTML += '%s\n' % msg
+			if username is not None and username != '':
+				msg = '[%s] %s\n' % (username, msg)
+			else:
+				msg = '%s\n' % msg
+			window.innerHTML += msg
 			window.scrollTop = window.scrollHeight
 			if clientid != 0:
 				js.signalClientMessage(clientid+1)
@@ -145,7 +149,7 @@ class ScreenHandlerGoldenLayout:
 			return None, e
 
 	async def print_main_window(self, msg, username= None):
-		await self.print_client_msg(0, msg)
+		await self.print_client_msg(0, msg, username=username)
 
 	async def clear_main_window(self):
 		window = js.document.getElementById(self.consoleoutput_base_id % '0')

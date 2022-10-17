@@ -125,7 +125,6 @@ function RemoteFileSystem(name, client) {
         while (true) {
             let dataresProxy = await res[0].get();
             let datares = dataresProxy.toJs();
-            console.log(datares);
             let done = datares[0];
             let data = datares[1];
             let totalsize = datares[2];
