@@ -7,9 +7,9 @@ var mouse_to_rdp = {
 }
 
 var rdp_specialchar_to_name = {
-    'Backspace': 'VK_BACK',
+    'Backspace': '14', //'VK_BACK',
     'Escape': 'VK_ESCAPE',
-    'Tab': 'VK_TAB',
+    'Tab': '15',
     'Enter': 'VK_RETURN',
     'Insert': 'VK_INSERT',
     'Delete': 'VK_DELETE',
@@ -49,6 +49,8 @@ var rdp_specialchar_to_name = {
     //'': 'VK_DIVIDE',
     'PrintScreen': 'VK_SNAPSHOT', //not sure abt this!
     'ContextMenu': 'VK_RMENU',
+    'c' : '46',
+    'v' : '47',
 }
 
 async function sendRDPMousePos(canvas, evt) {
@@ -88,7 +90,7 @@ function sendRDPKeys(canvas, evt) {
 
     // this is buggy :( 
     // you can send either one unicode char or one integer corresponding to a scancode
-
+    console.log(evt.key);
     var client_id = canvas.getAttribute("canvasclientid");
     var press = false;
     if (evt.type == "keydown") {
@@ -96,7 +98,7 @@ function sendRDPKeys(canvas, evt) {
     }
     var is_scancode = false;
     var keycode = null;
-    if (evt.key.length == 1) {
+    if (evt.key.length == 1 && evt.key != 'c' && evt.key != 'v') {
         is_scancode = false;
         keycode = evt.key;
     } else {
@@ -107,6 +109,8 @@ function sendRDPKeys(canvas, evt) {
             console.log("Not recognized key: " + evt.key);
         }
     }
+    console.log(keycode);
+    console.log(is_scancode);
     rdp_events[client_id]['keyboard'](keycode, press, is_scancode);
 }
 

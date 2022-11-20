@@ -1,4 +1,8 @@
 var packageLoadErrorMsg = null;
+
+// session restore data
+var loadSessionData = null;
+
 const pythonPackages = [
     'cffi', 'openssl', 'ssl', 'arc4', 'cryptography', 'certifi', 'lxml', 'xmljson', 'pyndiff',
     'Pillow',  'pyparsing',  'asn1tools', 'asn1crypto',
@@ -15,6 +19,19 @@ const fetchPyCode = (path) => fetch(`${window.location.origin}/${path}`).then(as
     return txt;
 });
 
+function overrideSessionFile(files){
+    let reader = new FileReader();
+	reader.onload = function(e) {
+		// binary data
+        loadSessionData = e.target.result
+		console.log('Session data loaded!');
+	};
+	reader.onerror = function(e) {
+		// error occurred
+		console.log('Loading session data error : ' + e.type);
+	};
+	reader.readAsArrayBuffer(files[0]);
+}
 
 // loads python packages and executes the luncher python code
 // also sets up the command input interface (runCmd)
@@ -292,7 +309,7 @@ const startPyodide = async() => {
         FS.mkdir('/volatile');
         FS.mount(BFS, { root: '/static' }, '/static');
         FS.mount(BFS, { root: '/volatile' }, '/volatile');
-
+        
         if (loadSessionData != null) {
             loadingScreenMessage('Writing session data to file...');
             let bfsBuffer = BrowserFS.BFSRequire('buffer');
@@ -300,8 +317,6 @@ const startPyodide = async() => {
             fs.writeFileSync("/static/octopwn.session", data);
             loadingScreenMessage('Session data written to file');
         }
-
-
     });
     //refreshFileList();
 

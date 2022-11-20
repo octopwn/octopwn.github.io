@@ -2,9 +2,6 @@
 // it is mapping the clinetID to the actual client object (proxyied via pyodide)
 var OCTOPWN_CLIENT_LOOKUP = {};
 
-// session restore data
-var loadSessionData = null;
-
 // this is for the window handler for the python application to call
 // when a new client is created.
 // this will add a new window to the layout
@@ -117,7 +114,6 @@ function addNewCredentialKeyTypeChanged(selection) {
                 credsecret.placeholder = "Certfile password";
                 break;
             }
-
         case (selection == 6):
             {
                 keyFileDiv.hidden = false;
@@ -125,7 +121,6 @@ function addNewCredentialKeyTypeChanged(selection) {
                 credsecret.placeholder = "Must be empty";
                 break;
             }
-
         default:
             {
                 keyFileDiv.hidden = true;
