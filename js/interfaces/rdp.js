@@ -90,7 +90,6 @@ function sendRDPKeys(canvas, evt) {
 
     // this is buggy :( 
     // you can send either one unicode char or one integer corresponding to a scancode
-    console.log(evt.key);
     var client_id = canvas.getAttribute("canvasclientid");
     var press = false;
     if (evt.type == "keydown") {
@@ -109,8 +108,6 @@ function sendRDPKeys(canvas, evt) {
             console.log("Not recognized key: " + evt.key);
         }
     }
-    console.log(keycode);
-    console.log(is_scancode);
     rdp_events[client_id]['keyboard'](keycode, press, is_scancode);
 }
 

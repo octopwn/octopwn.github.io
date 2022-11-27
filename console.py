@@ -8,10 +8,41 @@ from pyodide import create_proxy
 
 
 octopwnApp = None # Do not remove this!
+octopwnExtra = None
 
 class Dummy:
 	def __init__(self):
 		self.completer = None
+
+class ExtraOperations:
+	"""JS can't reach async functions directly, must be wrapped in a class.."""
+	def __init__(self, octopwn):
+		self.octopwn = octopwn
+		self.pypykatz_cli = None
+
+	async def localFileCreated(self, fpath):
+		"""This function will be called each time a new file is uploaded to the browserFS"""
+		#print('Python: newfile: %s' % fpath)
+		ftype= None
+		if fpath.lower().endswith('.dmp') or fpath.lower().endswith('.DMP'):
+			ftype = 'dmp'
+		if fpath.lower().endswith('.dit') or fpath.lower().endswith('.DIT'):
+			ftype = 'dit'
+		if fpath.lower().endswith('.reg') or fpath.lower().endswith('.reg'):
+			ftype = 'reg'
+		
+		
+		if ftype is not None and self.pypykatz_cli is None:
+			for cli in self.octopwn.clients:
+				config, client = self.octopwn.clients[cli]
+				if config is None:
+					continue
+				if config.config_type == 'UTILS' and config.scanner_type == 'PYPYKATZ':
+					self.pypykatz_cli = client
+		
+		if ftype == 'dmp':
+			await client.do_lsass(fpath)
+
 
 def createRegFileBrowser(filename):
 	from octopwn.utils.extras.reghelper import RegHelper
@@ -33,6 +64,8 @@ def criticalexception(msg, e = None):
 		exctrace += str(e) + '\r\n'
 		exctrace += gettb4exc(e)
 	js.showPythonError([excstr, exctrace], msg)
+
+
 
 class RemoteComms:
 	"""
@@ -376,6 +409,7 @@ class ScreenHandlerGoldenLayout:
 async def start():
 	try:
 		global octopwnApp
+		global octopwnExtra
 		# setting the current directory
 		os.chdir("/volatile/")
 		
@@ -477,6 +511,8 @@ async def start():
 				raise err
 			js.loadingScreenMessage("Authentication OK!")
 			apprunner = asyncio.create_task(octopwnApp.run_generic(comms))
+		
+		octopwnExtra = ExtraOperations(octopwnApp)
 			
 		await asyncio.sleep(0)
 		return True, None

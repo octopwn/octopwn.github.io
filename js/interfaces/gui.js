@@ -736,6 +736,10 @@ function showProxyEditModal(pid, ptype, description) {
         </div> <!-- End modal dialog div -->
     </div> <!-- End modal div -->`).appendTo("body").finish();
     $('#editProxyModal').modal('show');
+    $('#editProxyModal').on('hidden.bs.modal', function () {
+        const element = document.getElementById('editProxyModal');
+        element.parentNode.removeChild(element);
+    })
 }
 
 function showClientEditModal(cid, ctype, description) {
@@ -784,6 +788,10 @@ function showClientEditModal(cid, ctype, description) {
         </div> <!-- End modal dialog div -->
     </div> <!-- End modal div -->`).appendTo("body").finish();
     $('#editClientModal').modal('show');
+    $('#editClientModal').on('hidden.bs.modal', function () {
+        const element = document.getElementById('editClientModal');
+        element.parentNode.removeChild(element);
+    })
 }
 
 function showCredentialEditModal(cid, ctype, description) {
@@ -832,6 +840,10 @@ function showCredentialEditModal(cid, ctype, description) {
         </div> <!-- End modal dialog div -->
     </div> <!-- End modal div -->`).appendTo("body").finish();
     $('#editCredentialModal').modal('show');
+    $('#editCredentialModal').on('hidden.bs.modal', function () {
+            const element = document.getElementById('editCredentialModal');
+            element.parentNode.removeChild(element);
+        })
 }
 
 
@@ -881,6 +893,10 @@ function showTargetEditModal(cid, ctype, description) {
         </div> <!-- End modal dialog div -->
     </div> <!-- End modal div -->`).appendTo("body").finish();
     $('#editTargetModal').modal('show');
+    $('#editTargetModal').on('hidden.bs.modal', function () {
+        const element = document.getElementById('editTargetModal');
+        element.parentNode.removeChild(element);
+    })
 }
 
 

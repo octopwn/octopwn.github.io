@@ -292,6 +292,7 @@ function BrowserFSFileSystem(name) {
         let bfsBuffer = BrowserFS.BFSRequire('buffer');
         data = bfsBuffer.Buffer.from(filedata);
         await fs.writeFile(filepath, data);
+        await localFileCreated(filepath);
     }
 
     this.deleteFile = async function(path) {

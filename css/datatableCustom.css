@@ -165,23 +165,23 @@ table.dataTable thead .sorting_desc_disabled {
 }
 
 table.dataTable thead .sorting {
-    background-image: url("/js/datatables/DataTables-1.11.5/images/sort_both.png");
+    background-image: url("js/datatables/DataTables-1.11.5/images/sort_both.png");
 }
 
 table.dataTable thead .sorting_asc {
-    background-image: url("/js/datatables/DataTables-1.11.5/images/sort_asc.png") !important;
+    background-image: url("js/datatables/DataTables-1.11.5/images/sort_asc.png") !important;
 }
 
 table.dataTable thead .sorting_desc {
-    background-image: url("/js/datatables/DataTables-1.11.5/images/sort_desc.png") !important;
+    background-image: url("js/datatables/DataTables-1.11.5/images/sort_desc.png") !important;
 }
 
 table.dataTable thead .sorting_asc_disabled {
-    background-image: url("/js/datatables/DataTables-1.11.5/images/sort_asc_disabled.png");
+    background-image: url("js/datatables/DataTables-1.11.5/images/sort_asc_disabled.png");
 }
 
 table.dataTable thead .sorting_desc_disabled {
-    background-image: url("/js/datatables/DataTables-1.11.5/images/sort_desc_disabled.png");
+    background-image: url("js/datatables/DataTables-1.11.5/images/sort_desc_disabled.png");
 }
 
 table.dataTable tbody tr {

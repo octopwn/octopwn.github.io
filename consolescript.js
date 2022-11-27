@@ -3,6 +3,9 @@ var packageLoadErrorMsg = null;
 // session restore data
 var loadSessionData = null;
 
+// file created on Browserfs callback
+var localFileCreated = null;
+
 const pythonPackages = [
     'cffi', 'openssl', 'ssl', 'arc4', 'cryptography', 'certifi', 'lxml', 'xmljson', 'pyndiff',
     'Pillow',  'pyparsing',  'asn1tools', 'asn1crypto',
@@ -14,7 +17,7 @@ const pythonPackages = [
 // this function is to fetch the luncher python code from a file
 // allowing editing the python code in a separate python file insted of
 // merging it here to JS code
-const fetchPyCode = (path) => fetch(`${window.location.origin}/${path}`).then(async res => {
+const fetchPyCode = (path) => fetch(`${window.location.href}${path}`).then(async res => {
     const txt = await res.text();
     return txt;
 });
@@ -202,6 +205,11 @@ async function startOctoPwn(pyodide){
         }
         app.destroy();
     }
+    localFileCreated = async(fpath) => {
+        // montior local file creation
+        let extraops = pyodide.globals.get('octopwnExtra');
+        await extraops.localFileCreated(fpath);
+    }
 
     if (getOctoPwnModeOfOperation() == 'REMOTE') {
         createRemoteFileSystem(0, pyodide.globals.get('octopwnApp'));
@@ -275,7 +283,7 @@ const startPyodide = async() => {
 
     // loading the pyodide core. (this will load the core only)
     loadingScreenMessage("Loading Pyodide core...");
-    const pyodide = await loadPyodide({ indexURL: window.location.origin +"/js/pyodide/" });
+    const pyodide = await loadPyodide({ indexURL: window.location.href +"js/pyodide/" });
     // Pyodide core is now ready to use
 
     // setting up virtual filesystem
