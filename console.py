@@ -410,8 +410,12 @@ async def start():
 	try:
 		global octopwnApp
 		global octopwnExtra
+
+		volatile_dir = '/volatile/'
+		static_dir = '/static/'
+
 		# setting the current directory
-		os.chdir("/volatile/")
+		os.chdir(volatile_dir)
 		
 		# mode of operation switch. This looks a bit dumb here, but later down the line
 		# this will be extended with other features
@@ -422,14 +426,16 @@ async def start():
 			remote = False
 		elif MOO == 'REMOTE':
 			remote = True
+		
+		
 
 		screen = ScreenHandlerGoldenLayout(remote)
 
 		if remote is False:
 			from octopwn.core import OctoPwn
 			# checking if a session file exists
-			sessionfile = '/static/octopwn.session'
-			sessionfile_temp = '/static/octopwn.session.temp'
+			sessionfile = static_dir + 'octopwn.session'
+			sessionfile_temp = static_dir + 'octopwn.session.temp'
 
 			newsession = True
 			for filename in [sessionfile, sessionfile_temp]:
@@ -438,7 +444,7 @@ async def start():
 					with open(filename, 'rb') as f:
 						a = 1
 					js.loadingScreenMessage("It seems there is already a session file here. Trying to load it!")
-					octopwnApp = OctoPwn.load(filename, screen, work_dir = '/static/', periodic_save = True)
+					octopwnApp = OctoPwn.load(filename, screen, work_dir = volatile_dir, periodic_save = True, session_dir = static_dir)
 					js.loadingScreenMessage("Session restore ok!")
 					newsession = False
 					break
@@ -446,7 +452,7 @@ async def start():
 					js.loadingScreenMessage("Loading session file failed! Reason: %s" % str(e))
 			else:
 				js.loadingScreenMessage("Either no session file or it is corrupt, let the past die kill it if you have to...")
-				octopwnApp = OctoPwn(screen, work_dir = '/static/', periodic_save = True)
+				octopwnApp = OctoPwn(screen, work_dir = volatile_dir, periodic_save = True, session_dir = static_dir)
 		
 			apprunner, err = await octopwnApp.run()
 			if err is not None:
