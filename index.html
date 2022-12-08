@@ -31,6 +31,7 @@
     <script type="text/javascript" src="js/interfaces/filesystem/ldapfilebrowser.js"></script>
     <script type="text/javascript" src="js/interfaces/filesystem/registryfilebrowser.js"></script>
     <script type="text/javascript" src="js/interfaces/filesystem/remotefilebrowser.js"></script>
+    <script type="text/javascript" src="js/interfaces/filesystem/filedragndrop.js"></script>
     <script type="text/javascript" src="js/interfaces/gui.js"></script>
     <script type="text/javascript" src="js/interfaces/notes.js"></script>
     <script type="text/javascript" src="js/interfaces/network.js"></script>
@@ -42,6 +43,8 @@
     <script type="text/javascript" src="js/pyodide/pyodide.js"></script>
     <script type="text/javascript" src="js/pyconsole.js"></script>
     <script type="text/javascript" src="consolescript.js"></script>
+
+    
 
 
 
@@ -1038,8 +1041,10 @@ Hints
         document.getElementById('proxyurl').value = OCTOPWN_WSS_PROTOCOL_BASE + document.location.hostname + ':8700';
     </script>
 
-
-    <div id="goldenLayoutBody"></div>
+    <div id="dropzone" class="dropzone"> <!-- file upload ropzone -->
+        <div id="goldenLayoutBody"></div>
+    </div> 
+    
 </body>
 
 </html>

@@ -3,6 +3,7 @@ import js
 import os
 import asyncio
 import traceback
+from zipfile import ZipFile
 from pyodide import create_proxy
 #from octopwn.common.screenhandler import ScreenHandlerBase
 
@@ -14,34 +15,129 @@ class Dummy:
 	def __init__(self):
 		self.completer = None
 
+async def dummyprint(x):
+	return
+
+class AsyncFile:
+	def __init__(self, fhandle, filename = 'asyncfile'):
+		self.filename = filename
+		self.fhandle = fhandle
+	
+	async def read(self, n = -1):
+		return self.fhandle.read(n)
+
+	async def seek(self, n, beg = 0):
+		return self.fhandle.seek(n, beg)
+
+	def tell(self):
+		return self.fhandle.tell()
+
 class ExtraOperations:
 	"""JS can't reach async functions directly, must be wrapped in a class.."""
 	def __init__(self, octopwn):
 		self.octopwn = octopwn
 		self.pypykatz_cli = None
+		self.ext_requires = {
+			'.dmp' : 'pypykatz',
+			'.db'  : 'jackdaw',
+			'.zip' : 'zipfile',
+		}
+	
+	async def find_pypykatz(self):
+		if self.pypykatz_cli is not None:
+			return self.pypykatz_cli
 
-	async def localFileCreated(self, fpath):
+		for cli in self.octopwn.clients:
+			config, client = self.octopwn.clients[cli]
+			if config is None:
+				continue
+			if config.config_type == 'UTILS' and config.scanner_type == 'PYPYKATZ':
+				self.pypykatz_cli = client
+				return self.pypykatz_cli
+
+	async def localFileCreated(self, fpath, fhandle, print_cb):
 		"""This function will be called each time a new file is uploaded to the browserFS"""
-		#print('Python: newfile: %s' % fpath)
-		ftype= None
-		if fpath.lower().endswith('.dmp') or fpath.lower().endswith('.DMP'):
-			ftype = 'dmp'
-		if fpath.lower().endswith('.dit') or fpath.lower().endswith('.DIT'):
-			ftype = 'dit'
-		if fpath.lower().endswith('.reg') or fpath.lower().endswith('.reg'):
-			ftype = 'reg'
+		# fhandle and print_cb is not required, but since it's being called from Javascript
+		# it must be done like this
+		if print_cb is None:
+			print_cb = dummyprint
+		processor = None
+		for ext in self.ext_requires:
+			if fpath.lower().endswith(ext) is True:
+				processor = self.ext_requires[ext]
 		
+		if processor is None:
+			return
 		
-		if ftype is not None and self.pypykatz_cli is None:
-			for cli in self.octopwn.clients:
-				config, client = self.octopwn.clients[cli]
-				if config is None:
-					continue
-				if config.config_type == 'UTILS' and config.scanner_type == 'PYPYKATZ':
-					self.pypykatz_cli = client
-		
-		if ftype == 'dmp':
-			await client.do_lsass(fpath)
+		if processor == 'pypykatz':
+			await print_cb('Parsing LSASS dump file %s...' % fpath)
+			client = await self.find_pypykatz()
+			if fhandle is not None:
+				await client.do_lsass(AsyncFile(fhandle)) 
+			else:
+				await client.do_lsass(fpath)
+			await print_cb('Done! \r\n')
+		elif processor == 'jackdaw':
+			await print_cb('SQLite file found at %s!\r\n    Creating Jackdaw client...' % fpath)
+			#opening a new one
+			clid, err = await self.octopwn.do_createutil('JACKDAW')
+			if err is not None:
+				raise err
+			await print_cb('    Done!\r\n     Opening Jackdaw database on client %s\r\n' % clid)
+			_, client = self.octopwn.clients[clid]
+			_, err = await client.do_dbload(fpath)
+			if err is not None:
+				raise err
+			await print_cb('    Parsing graph (this will take some time)...\r\n')
+			_, err = await client.do_graphload('1')
+			if err is not None:
+				raise err
+			await print_cb('    Done!\r\n')
+		elif processor == 'zipfile':
+			reglist = {
+				'system' : None,
+				'sam' : None,
+				'security' : None,
+				'software' : None,
+			}
+			ntds = None
+			with ZipFile(fpath, 'r') as zip:
+				await print_cb('Opening zip file "%s"...\r\n' % fpath)
+				for info in zip.infolist():
+					fname = info.filename.lower()
+					print(fname)
+					if fname.endswith('.dmp') is True:
+						await print_cb('Found LSASS dump file in zip!\r\n')
+						with zip.open(info.filename, 'r') as filehandle:
+							await self.localFileCreated(info.filename, filehandle, print_cb)
+					elif fname.endswith('.dit') is True:
+						await print_cb('Found NTDS.dit file in zip!\r\n')
+						ntds = AsyncFile(zip.open(info.filename))
+					elif fname.endswith('.reg') is True:
+						for rtpe in reglist:
+							if fname.find(rtpe) != -1:
+								await print_cb('Found registry file "%s" in zip!\r\n' % info.filename)
+								reglist[rtpe] = AsyncFile(zip.open(info.filename))
+					elif fname.endswith('system'):
+						await print_cb('Found SYSTEM registry file in zip!\r\n')
+						reglist['system'] = AsyncFile(zip.open(info.filename))
+					elif fname.endswith('security'):
+						await print_cb('Found SECURITY registry file in zip!\r\n')
+						reglist['security'] = AsyncFile(zip.open(info.filename))
+					elif fname.endswith('sam'):
+						await print_cb('Found SAM registry file in zip!\r\n')
+						reglist['sam'] = AsyncFile(zip.open(info.filename))
+				
+				if reglist['system'] is not None:
+					await print_cb('Parsing registry hives found in zip file!\r\n')
+					client = await self.find_pypykatz()
+					await client.do_registry(reglist['system'], sam=reglist['sam'], security=reglist['security'], software=reglist['software'])
+					if ntds is not None:
+						await print_cb('Parsing NTDS database found in zip file!\r\n')
+						await client.do_ntds(reglist['system'], ntds, progress_cb = print_cb)
+
+
+					
 
 
 def createRegFileBrowser(filename):

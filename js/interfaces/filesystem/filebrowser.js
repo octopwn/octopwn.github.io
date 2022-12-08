@@ -287,12 +287,15 @@ function BrowserFSFileSystem(name) {
 
     }
 
-    this.createFile = async function(filepath, filedata) {
+    this.createFile = async function(filepath, filedata, autoProcess = true) {
         let fs = BrowserFS.BFSRequire('fs');
         let bfsBuffer = BrowserFS.BFSRequire('buffer');
         data = bfsBuffer.Buffer.from(filedata);
         await fs.writeFile(filepath, data);
-        await localFileCreated(filepath);
+        if(autoProcess){
+            await localFileCreated(filepath, null, null);
+        }
+        
     }
 
     this.deleteFile = async function(path) {
@@ -530,6 +533,8 @@ function FileBrowser(tablename) {
 
 
     this.setupFileDrop = function(divname) {
+        return; //we have a different drop functionaily now...
+        
         let dropArea = document.getElementById(divname);
 
         // Prevent default drag behaviors

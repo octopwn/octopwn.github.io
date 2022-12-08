@@ -516,6 +516,67 @@ function initializeGUI() {
             'Python interpreter',
             ''
         ]).draw();
+        
+
+        // SETTING UP FULL WINDOW FILE DROPZONE
+        //var goldenLayoutRoot = document.getElementsByClassName('lm_root')[0];
+        let goldenLayoutRoot = document.body;
+        let fileDropZone = document.getElementById('dropzone');
+
+        function showFileDropZone() {
+            fileDropZone.style.display = "block";
+        }
+        function hideFileDropZone() {
+            fileDropZone.style.display = "none";
+        }
+
+        function allowDrag(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            return false;
+            
+            /*
+            if(e.dataTransfer != undefined && e.dataTransfer != null && e.dataTransfer.dropEffect == 'copy'){
+                e.preventDefault();
+            }
+            */
+
+            /*
+            if (true) {  // Test that the item being dragged is a valid one
+                e.dataTransfer.dropEffect = 'copy';
+                e.preventDefault();
+            }
+            */
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            hideFileDropZone();
+            console.log(e);
+            //console.log(e.dataTransfer.files[0]);
+            if(e.dataTransfer != undefined && e.dataTransfer != null){
+                if(e.dataTransfer.files.length > 0){
+                    await showFileUploadModal(e.dataTransfer.files);
+                }
+                
+            }
+            return false;
+        }
+
+        // Adding event listeners for file drag-n-drop
+        window.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            showFileDropZone();
+        });
+
+        goldenLayoutRoot.addEventListener('drop', handleDrop);
+        goldenLayoutRoot.addEventListener('dragenter', allowDrag);
+        goldenLayoutRoot.addEventListener('dragover', allowDrag);
+        goldenLayoutRoot.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            hideFileDropZone();
+        });
     });
 
     myLayout.init();
@@ -1124,6 +1185,11 @@ async function addProxyChain() {
     $('#createProxyChainModal').modal('hide');
     removeClass('createProxyChainModalClass');
 }
+
+function asyncTimeoutMs(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 /*
 function addScreenSaver() {

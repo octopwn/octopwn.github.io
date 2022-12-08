@@ -205,10 +205,10 @@ async function startOctoPwn(pyodide){
         }
         app.destroy();
     }
-    localFileCreated = async(fpath) => {
+    localFileCreated = async(fpath, temp, print_cb) => {
         // montior local file creation
         let extraops = pyodide.globals.get('octopwnExtra');
-        await extraops.localFileCreated(fpath);
+        await extraops.localFileCreated(fpath, temp, print_cb);
     }
 
     if (getOctoPwnModeOfOperation() == 'REMOTE') {
