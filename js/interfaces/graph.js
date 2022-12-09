@@ -211,48 +211,48 @@ function getNodeImage(node) {
     }
     switch (node.type) {
         case 'group':
-            imgData.selected = '/img/graph/group.png';
-            imgData.unselected = '/img/graph/group.png';
+            imgData.selected = 'img/graph/group.png';
+            imgData.unselected = 'img/graph/group.png';
             if (node.highvalue) {
-                imgData.selected = '/img/graph/group_hvt.png';
-                imgData.unselected = '/img/graph/group_hvt.png';
+                imgData.selected = 'img/graph/group_hvt.png';
+                imgData.unselected = 'img/graph/group_hvt.png';
             }
             if (node.owned) {
-                imgData.selected = '/img/graph/group_owned.png';
-                imgData.unselected = '/img/graph/group_owned.png';
+                imgData.selected = 'img/graph/group_owned.png';
+                imgData.unselected = 'img/graph/group_owned.png';
             }
             break;
         case 'user':
-            imgData.selected = '/img/graph/user.png';
-            imgData.unselected = '/img/graph/user.png';
+            imgData.selected = 'img/graph/user.png';
+            imgData.unselected = 'img/graph/user.png';
             if (node.highvalue) {
-                imgData.selected = '/img/graph/user_hvt.png';
-                imgData.unselected = '/img/graph/user_hvt.png';
+                imgData.selected = 'img/graph/user_hvt.png';
+                imgData.unselected = 'img/graph/user_hvt.png';
             }
             if (node.owned) {
-                imgData.selected = '/img/graph/user_owned.png';
-                imgData.unselected = '/img/graph/user_owned.png';
+                imgData.selected = 'img/graph/user_owned.png';
+                imgData.unselected = 'img/graph/user_owned.png';
             }
             break;
         case 'machine':
-            imgData.selected = '/img/graph/computer.png';
-            imgData.unselected = '/img/graph/computer.png';
+            imgData.selected = 'img/graph/computer.png';
+            imgData.unselected = 'img/graph/computer.png';
             if (node.highvalue) {
-                imgData.selected = '/img/graph/computer_hvt.png';
-                imgData.unselected = '/img/graph/computer_hvt.png';
+                imgData.selected = 'img/graph/computer_hvt.png';
+                imgData.unselected = 'img/graph/computer_hvt.png';
             }
             if (node.owned) {
-                imgData.selected = '/img/graph/computer_owned.png';
-                imgData.unselected = '/img/graph/computer_owned.png';
+                imgData.selected = 'img/graph/computer_owned.png';
+                imgData.unselected = 'img/graph/computer_owned.png';
             }
             break;
         case 'ou':
-            imgData.selected = '/img/graph/organizational.png';
-            imgData.unselected = '/img/graph/organizational.png';
+            imgData.selected = 'img/graph/organizational.png';
+            imgData.unselected = 'img/graph/organizational.png';
             break;
         default:
-            imgData.selected = '/img/graph/unknown.png';
-            imgData.unselected = '/img/graph/unknown.png';
+            imgData.selected = 'img/graph/unknown.png';
+            imgData.unselected = 'img/graph/unknown.png';
             break;
     }
     return imgData;

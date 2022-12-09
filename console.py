@@ -101,6 +101,28 @@ class ExtraOperations:
 				'software' : None,
 			}
 			ntds = None
+			if fpath.lower().find('bloodhound') != -1:
+				await print_cb('Bloodhound zip file found at %s!\r\n    Creating Jackdaw client...' % fpath)
+				clid, err = await self.octopwn.do_createutil('JACKDAW')
+				if err is not None:
+					raise err
+				await print_cb('    Done!\r\n     Importing Bloodhound data on client %s. This wil take a LOT of time...\r\n' % clid)
+				_, client = self.octopwn.clients[clid]
+				dbpath, err = await client.do_bhimport(fpath)
+				if err is not None:
+					raise err
+				await print_cb('    Done!\r\n     Opening converted database on client %s\r\n' % clid)
+				_, client = self.octopwn.clients[clid]
+				_, err = await client.do_dbload(dbpath)
+				if err is not None:
+					raise err
+				await print_cb('    Parsing graph (this will take some time)...\r\n')
+				_, err = await client.do_graphload('1')
+				if err is not None:
+					raise err
+				await print_cb('    Done!\r\n')	
+				return
+
 			with ZipFile(fpath, 'r') as zip:
 				await print_cb('Opening zip file "%s"...\r\n' % fpath)
 				for info in zip.infolist():

@@ -531,6 +531,7 @@ function initializeGUI() {
         }
 
         function allowDrag(e) {
+            console.log(e);
             if (e.preventDefault) {
                 e.preventDefault();
             }
@@ -551,11 +552,11 @@ function initializeGUI() {
         }
 
         async function handleDrop(e) {
-            e.preventDefault();
             hideFileDropZone();
             console.log(e);
             //console.log(e.dataTransfer.files[0]);
             if(e.dataTransfer != undefined && e.dataTransfer != null){
+                e.preventDefault();
                 if(e.dataTransfer.files.length > 0){
                     await showFileUploadModal(e.dataTransfer.files);
                 }
@@ -566,6 +567,8 @@ function initializeGUI() {
 
         // Adding event listeners for file drag-n-drop
         window.addEventListener('dragenter', function(e) {
+            console.log("dragenter window");
+            console.log(e);
             e.preventDefault();
             showFileDropZone();
         });
@@ -574,7 +577,6 @@ function initializeGUI() {
         goldenLayoutRoot.addEventListener('dragenter', allowDrag);
         goldenLayoutRoot.addEventListener('dragover', allowDrag);
         goldenLayoutRoot.addEventListener('dragleave', function(e) {
-            e.preventDefault();
             hideFileDropZone();
         });
     });
